@@ -100,8 +100,8 @@ export default function Index() {
           </div>
 
           <div className="flex flex-col h-full mt-2">  {/* Modificação aqui */}
-            <p>_</p>
-            <Button variant={"secondary"} onClick={update}>Salvar modificações</Button>
+            <p className="invisible">_</p>
+            <Button variant={"destructive"} onClick={update}>Salvar modificações</Button>
           </div>
         </div>
       </div>
