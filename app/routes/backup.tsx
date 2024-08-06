@@ -1,6 +1,6 @@
 import { Button } from "~/components/ui/button";
 import { Link, useLoaderData } from "@remix-run/react";
-import { DatabaseBackup, Trash } from "lucide-react";
+import { Check, Cloud, DatabaseBackup, Trash } from "lucide-react";
 import { ThemeToggle } from "./resources.theme-toggle";
 import { prisma } from "~/db.server";
 import { Input } from "~/components/ui/input";
@@ -14,6 +14,7 @@ const presetValues = {
   cron: '* * * * *',
   device: 'mac',
   bucket: 'pedegasbackups',
+  databaseUrl: 'postgresql://postgres:postgres@localhost:5432/dbname',
   action: '',
 };
 
@@ -33,6 +34,7 @@ export async function action({ request, context }: any) {
       device: body.result.device,
       bucket: body.result.bucket,
       action: body.result.action,
+      databaseUrl: body.result.databaseUrl,
     }) } });
   }
 
@@ -43,6 +45,12 @@ export async function getBucketName() {
   const result = await prisma.setting.findFirst();
   const settings = JSON.parse(result?.value);
   return settings['bucket'];  
+}
+
+export async function getDeviceName() {
+  const result = await prisma.setting.findFirst();
+  const settings = JSON.parse(result?.value);
+  return settings['device'];  
 }
 
 export async function loader() {
@@ -109,6 +117,19 @@ export default function Index() {
     }
   }
 
+  const newBackup = async () => {
+    try {
+      await axios.post('/new-backup', {});
+      // if(data.error) {
+        window.location.reload();
+      // }
+      // setSuccessMessage('Modificado com sucesso.');
+      // setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setData((prevData) => ({
@@ -149,7 +170,7 @@ export default function Index() {
 
       <div className="container flex flex-col space-y-4">
         <div className="flex flex-row items-start flex-grow gap-3">
-          <div className="flex flex-col grow">
+          <div className="flex flex-col grow-1">
             <label htmlFor="device" className="mb-2 font-medium">Dispositivo</label>
             <Input
               id="device"
@@ -158,6 +179,19 @@ export default function Index() {
               value={data.result.device}
               onChange={handleChange}
               onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+            />
+          </div>
+
+          <div className="flex flex-col min-w-[440px]">
+            <label htmlFor="databaseUrl" className="mb-2 font-medium">Url do banco</label>
+            <Input
+              id="databaseUrl"
+              placeholder="Url do banco"
+              name="databaseUrl"
+              value={data.result.databaseUrl}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
             />
           </div>
 
@@ -173,7 +207,7 @@ export default function Index() {
             />
           </div>
 
-          <div className="flex flex-col grow">
+          <div className="flex flex-col grow " >
             <label htmlFor="cron" className="mb-2 font-medium">Cron</label>
             <Input
               id="cron"
@@ -187,8 +221,14 @@ export default function Index() {
 
           <div className="flex flex-col h-full mt-2">
             <p className="invisible">_</p>
-            <Button variant={"destructive"} onClick={update}>Salvar modificações</Button>
+            <Button className='bg-green-600' onClick={update}>
+              <Check className="mr-2"/>
+              Salvar modificações
+            </Button>
           </div>
+        </div>
+        <div>
+          <Button className='bg-blue-400' onClick={newBackup}><Cloud className="mr-3"/> Realizar Backup</Button>
         </div>
       </div>
 
