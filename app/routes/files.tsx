@@ -1,6 +1,8 @@
 import { LoaderFunction } from "@remix-run/node"; // Ensure using server-side
-import { ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { S3Client } from "@aws-sdk/client-s3";
+import { prisma } from "~/db.server";
+import { getBucketName } from "./backup";
 
 const s3 = new S3Client({
   region: process.env?.AWS_REGION,
@@ -11,7 +13,8 @@ const s3 = new S3Client({
 } as any);
 
 export const loader: LoaderFunction = async ({request}: any) => {
-  const files = await getFiles('pedegasbackups')
+  const bucket = await getBucketName()
+  const files = await getFiles(bucket)
 
   return {
     files
@@ -31,4 +34,13 @@ export async function getFiles(bucket: string) {
 
     return sortedFiles;
     // return files;
+}
+
+export async function deleteFile(bucket: string, key: string) {    
+    const params = {
+      Bucket: bucket,
+      Key: key
+    };
+
+    await s3.send(new DeleteObjectCommand(params));
 }

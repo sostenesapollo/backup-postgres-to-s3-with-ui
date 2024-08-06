@@ -74,3 +74,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* You can add this to your global CSS file or in a <style> tag in your component */
+.success-message {
+  @apply fixed bottom-4 right-4 bg-green-600 text-white p-3 rounded shadow-lg transition-transform duration-500;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.success-message.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.success-message.hidden {
+  opacity: 0;
+  transform: translateY(10px);
+}
