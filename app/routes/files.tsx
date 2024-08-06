@@ -1,5 +1,5 @@
 import { LoaderFunction } from "@remix-run/node"; // Ensure using server-side
-import { ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { S3Client } from "@aws-sdk/client-s3";
 import { prisma } from "~/db.server";
 import { getBucketName } from "./backup";
@@ -65,6 +65,25 @@ export async function uploadFile(filePath: string, bucket: string, key: string) 
     return true; // Indicate successful upload
   } catch (error) {
     console.error('Error uploading file:', error);
+    throw error;
+  }
+}
+
+export async function downloadFile(key: string) {
+  try {
+    const bucket = await getBucketName()
+    const params = {
+      Bucket: bucket,
+      Key: key
+    };
+
+    const command = new GetObjectCommand(params);
+    const response = await s3.send(command);
+
+    await fs.writeFile(key, response.Body as Buffer);
+    console.log(`File downloaded successfully to ${key}`);
+  } catch (error) {
+    console.error('Error downloading file:', error);
     throw error;
   }
 }

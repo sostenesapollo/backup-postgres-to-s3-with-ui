@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "remix build",
-    "dev": "remix dev --manual",
+    "dev": "remix dev --manual  --port 3001",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/index.js",
     "typecheck": "tsc"
@@ -25,10 +25,12 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "dayjs": "^1.11.12",
+    "dayjs-plugin-utc": "^0.1.2",
     "framer-motion": "^11.0.2",
     "isbot": "^3.6.8",
     "lucide-react": "^0.308.0",
     "node-cron": "^3.0.3",
+    "pg": "^8.12.0",
     "prisma": "^5.17.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -37,6 +39,7 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^2.11.1",
+    "@types/pg": "^8.11.6",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.7.4",

@@ -1,14 +1,16 @@
 import { Button } from "~/components/ui/button";
 import { Link, useLoaderData } from "@remix-run/react";
-import { Check, Cloud, DatabaseBackup, Trash } from "lucide-react";
+import { Check, Cloud, DatabaseBackup, Download, Trash, Upload } from "lucide-react";
 import { ThemeToggle } from "./resources.theme-toggle";
 import { prisma } from "~/db.server";
 import { Input } from "~/components/ui/input";
 import { useState } from "react";
 import axios from 'axios';
-import { deleteFile, getFiles } from "./files";
+import { deleteFile, downloadFile, getFiles } from "./files";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 import dayjs from '../../node_modules/dayjs/esm/index';
+import { countRecords } from "~/lib/postgres";
+import { removeFile, restoreDatabase } from "~/lib/backup";
 
 const presetValues = {
   cron: '* * * * *',
@@ -21,6 +23,14 @@ const presetValues = {
 export async function action({ request, context }: any) {
   const body = await request.json();
   console.log('body', body);
+
+  try {
+    const count =await countRecords()
+    console.log(count);
+    
+  }catch(e){
+    console.log(e);
+  }
   
   if(body.action === 'delete') {
     const bucket = await getBucketName()
@@ -36,6 +46,19 @@ export async function action({ request, context }: any) {
       action: body.result.action,
       databaseUrl: body.result.databaseUrl,
     }) } });
+  }
+
+  if(body.action === 'restore') {
+    const key = body.key;
+    console.log('Baixando arquivo localmente.', body.key);
+    await downloadFile(key)
+    console.log('Baixado com sucesso.', body.key);
+    console.log('Restaurando banco de dados.', body.key);
+    await restoreDatabase(key);
+    console.log('Restaurado com sucesso.', body.key);
+    console.log('Removendo arquivo localmente.', body.key);
+    await removeFile(key);
+    console.log('Removido com sucesso.', body.key);
   }
 
   return {};
@@ -74,13 +97,26 @@ export async function loader() {
     error = _error
   }
 
-  console.log('files', files);
+  console.log('files', files.length);
   
+
+  let count, last_sale;
+  try {
+    const res = await countRecords('orders')
+    count = res.count;
+    last_sale = res.last_sale;
+  } catch (e) {
+    error = e.message;
+    console.error('>', error, 'msg:', e.message);
+  }
+
   return {
     date: new Date(),
     result: JSON.parse(result.value),
     files: files,
-    error
+    error,
+    count,
+    last_sale
   };
 }
 
@@ -103,6 +139,20 @@ export default function Index() {
       console.error('Update failed:', error);
     }
   };
+
+  const restore = async (key: string) => {
+    try {
+      await axios.post('/backup', {key, action: 'restore'});
+      setSuccessMessage('Restaurado com sucesso.');
+      setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
+
+      // await axios.get('/files').then((response) => {
+      //   setData((data)=>({...data, files: response.data.files}));
+      // })
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
+  }
 
   const remove = async (key: string) => {
     try {
@@ -167,7 +217,7 @@ export default function Index() {
       )}
       
       {data?.error && (
-        <span className={`fixed bottom-4 right-4 bg-red-600 text-white p-3 rounded shadow-lg transition-transform duration-500 opacity-100 translate-y-0`}>
+        <span className={`fixed bottom-4 right-4 bg-red-600 text-white p-3 rounded shadow-lg transition-transform duration-500 opacity-100 z-10 translate-y-0`}>
           Erro ao carregar os arquivos do S3, verifique se o nome do bucket está correto:
           <pre>
           {JSON.stringify(data?.error, null, 2)}
@@ -234,7 +284,7 @@ export default function Index() {
             </Button>
           </div>
         </div>
-        <div>
+        <div className="flex justify-between">
           <Button className='bg-blue-400' onClick={newBackup} disabled={loading}>
             {loading ? (
               <svg aria-hidden="true" className={`inline w-6 h-6 mr-2 text-gray-50 animate-spin dark:text-gray-200 fill-pink-600`} viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -245,13 +295,21 @@ export default function Index() {
 
             {loading ? 'Fazendo o backup...' : 'Realizar Backup' }
           </Button>
+          <div className="mt-2">
+            Quantidade de vendas: {data?.count}
+          </div>
+          <div className="mt-2">
+            Última venda: {data?.last_sale}
+          </div>
         </div>
       </div>
 
       <div className="container">
         {/* {JSON.stringify(data)} */}
         <Table>
-          <TableCaption>Listagem de todos os backups do S3.</TableCaption>
+          <TableCaption>
+            Listagem de todos os backups do S3.
+          </TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[100px]">Size</TableHead>
@@ -269,11 +327,17 @@ export default function Index() {
                 <TableCell>{dayjs(new Date(file.lastModified)).format('DD / MM / YYYY')}</TableCell>
                 <TableCell>{dayjs(new Date(file.lastModified)).format('HH:mm')}</TableCell>
                 <TableCell>
-                    <button
-                      type="button"
-                      className={"text-white bg-red-600 border border-red-700 hover:bg-red-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:focus:ring-red-800 dark:hover:bg-red-500"}
+                  <button
+                    type="button"
+                    className={"text-white bg-blue-500 border border-blue-700 hover:bg-blue-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500"}
                   >
-                    <Trash className="p-1" onClick={()=>remove(file.key)}/>
+                    <Download className="m-1" onClick={()=>restore(file.key)}/>
+                  </button>
+                  <button
+                    type="button"
+                    className={"ml-2 text-white bg-red-600 border border-red-700 hover:bg-red-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:focus:ring-red-800 dark:hover:bg-red-500"}
+                  >
+                    <Trash className="m-1" onClick={()=>remove(file.key)}/>
                   </button>
                 </TableCell>
                 
