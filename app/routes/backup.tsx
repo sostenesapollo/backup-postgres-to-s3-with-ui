@@ -551,7 +551,7 @@ export default function Index() {
                   >
                     {/* {clickedId} */}
                     {id === clickedId ? <Loading className="ml-3"/> : <Download className="m-1"/>}
-                    {id === clickedId ? 'Restaurando...' : 'Restaurar'}
+                    {id === clickedId ? 'Restoring...' : 'Restore'}
                   </button>
                   <button
                     type="button"
