@@ -10,6 +10,7 @@
 
 #### Todo List
 
+- [ ] Create `Dockerfile/docker-compose` ?
 - [ ] Cron
 - [ ] Whatsapp Notifications
 - [ ] Email notifications
