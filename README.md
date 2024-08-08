@@ -1,4 +1,4 @@
-# 🎲 👹 Database Thing
+# 🎲 👹 The Database Thing
 <img src="public/gif.gif"/>
 
 
