@@ -10,7 +10,7 @@ import { deleteFile, downloadFile, getFiles } from "./files";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 import dayjs from '../../node_modules/dayjs/esm/index';
 import { countRecords } from "~/lib/postgres";
-import { removeFile, restoreDatabase } from "~/lib/backup";
+import { listBuckets, removeFile, restoreDatabase } from "~/lib/backup";
 import { twMerge } from "tailwind-merge";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -127,13 +127,22 @@ export async function loader() {
     console.error('>', error, 'msg:', e.message);
   }
 
+  let buckets = [];
+  try {
+    buckets = await listBuckets()
+  } catch (e) {
+    error = e.message;
+    console.error('>', error, 'msg:', e.message);
+  }
+
   return {
     date: new Date(),
     result: JSON.parse(result.value),
     files: files,
     error,
     count,
-    last_sale
+    last_sale,
+    buckets
   };
 }
 
@@ -156,6 +165,7 @@ export default function Index() {
         window.location.reload();
       }
       setSuccessMessage('Modificado com sucesso.');
+      reloadFiles();
       setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
     } catch (error) {
       console.error('Update failed:', error);
@@ -163,34 +173,13 @@ export default function Index() {
   };
 
   const [clickedId, setClickedId] = useState(null);
-  
-  const restore = async (key: string) => {
-    setLoading(true)
-    try {
-      await axios.post('/backup', {key, action: 'restore'});
-      setSuccessMessage('Restaurado com sucesso.');
-      setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
-
-      // await axios.get('/files').then((response) => {
-      //   setData((data)=>({...data, files: response.data.files}));
-      // })
-    } catch (error) {
-      console.error('Update failed:', error);
-    } finally {
-      setLoading(false)
-      setClickedId(null)
-    }
-  }
 
   const remove = async (key: string) => {
     try {
       await axios.post('/backup', {key, action: 'delete'});
       setSuccessMessage('Modificado com sucesso.');
+      reloadFiles();
       setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
-
-      await axios.get('/files').then((response) => {
-        setData((data)=>({...data, files: response.data.files}));
-      })
     } catch (error) {
       console.error('Update failed:', error);
     }
@@ -205,6 +194,11 @@ export default function Index() {
   const newBackup = async () => {
     setAction(()=> 'backup' as any)
   };
+
+  const restore = async (fileKey: string) => {
+    setClickedId(()=>fileKey as any)
+    setAction(()=> 'restore' as any)
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -229,7 +223,7 @@ export default function Index() {
     console.log('>>>', action);
   
     if(action === 'restore') {
-      eventSource = new EventSource("/events?action=restore");
+      eventSource = new EventSource("/events?action=restore&file="+clickedId);
     } else if(action === 'backup') {
       eventSource = new EventSource("/events?action=backup");
     }
@@ -269,11 +263,11 @@ export default function Index() {
       <ToastContainer />
 
       <div className="flex">
-        <div>
+        {/* <div>
           <pre>
-            {/* {JSON.stringify(data.result, null, 2)} */}
+            {JSON.stringify(data, null, 2)}
           </pre>
-        </div>
+        </div> */}
         <div>
           {messages.map((message: any, index) => (
             message?.error ? 
@@ -324,14 +318,25 @@ export default function Index() {
 
           <div className="flex flex-col grow">
             <label htmlFor="bucket" className="mb-2 font-medium">Bucket</label>
-            <Input
+            {/* <Input
               id="bucket"
               placeholder="Bucket"
               name="bucket"
               value={data.result.bucket}
               onChange={handleChange}
               onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-            />
+            /> */}
+            <select
+              id="bucket"
+              name="bucket"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              value={data.result.bucket}
+              onChange={handleChange}
+            >
+              {data?.buckets?.map((bucket) => (
+                <option key={bucket} value={bucket}>{bucket}</option>
+              ))}
+            </select>
           </div>
 
           <div className="flex flex-col grow " >

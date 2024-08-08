@@ -69,7 +69,7 @@ export async function uploadFile(filePath: string, bucket: string, key: string) 
   }
 }
 
-export async function downloadFile(key: string) {
+export async function downloadFile(key: string, log=console.log) {
   try {
     const bucket = await getBucketName()
     const params = {

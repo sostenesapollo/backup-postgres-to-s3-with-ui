@@ -28,9 +28,9 @@ export async function countRecords(tableName="orders") {
   return { count, last_sale: dayjs(last_sale).add(-3, 'hours').format('DD/MM/YYYY HH:mm') };
 }
 
-console.log('counting...');
+// console.log('counting...');
 
 // Example usage:
-countRecords('orders')
-  .then(({ count, last_sale }) => console.log(`Number of orders: ${count}, last sale at ${last_sale}`))
-  .catch(err => console.error(err));
+// countRecords('orders')
+//   .then(({ count, last_sale }) => console.log(`Number of orders: ${count}, last sale at ${last_sale}`))
+//   .catch(err => console.log('Error to 'err));

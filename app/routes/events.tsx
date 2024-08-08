@@ -1,5 +1,6 @@
 import { LoaderFunction } from "@remix-run/node";
 import { backupDatabase, restoreDatabase } from "~/lib/backup";
+import { downloadFile } from "./files";
 
 const logger = (sendEvent:any) => (message: any) => {
   sendEvent({ message });
@@ -10,7 +11,7 @@ export const loader: LoaderFunction = async ({ request }) => {
   try {
   const url = new URL(request.url);
   const action = url.searchParams.get("action")
-  const file = url.searchParams.get("file")
+  const file = url.searchParams.get("file") as string
   
   const stream = new ReadableStream({
     start(controller) {
@@ -41,15 +42,25 @@ export const loader: LoaderFunction = async ({ request }) => {
           closeStream();
         })
       } else if(action === 'restore'){
-        restoreDatabase(file, log).then((msg)=>{
-          log({success: 'Process completed'});
-          log(msg);
-          
-          closeStream();
-        }).catch(e=>{
-          log({ error: e.message })
-          closeStream();
-        })
+        log(`Downloading file [${file}] from S3...`);
+
+        downloadFile(file, log)
+          .then(()=>{
+            log({success: 'Download from S3 successfull' });
+            
+            restoreDatabase(file, log).then((msg)=>{
+              log({success: 'Process completed'});
+
+              closeStream();
+            }).catch(e=>{
+              log({ error: e.message })
+              closeStream();
+            })
+          })
+          .catch(e=>{
+            log({ error: e.message })
+            closeStream();
+          })
       } else {
         log(`action not defined.`);
         closeStream();

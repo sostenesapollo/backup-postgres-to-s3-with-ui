@@ -4,9 +4,24 @@ import { getBucketName, getDeviceName, getSettings, } from '~/routes/backup';
 import { uploadFile } from '~/routes/files';
 import fs from 'fs/promises';
 import path from 'path';
+import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3';
 
+export const listBuckets = async () => {
+  const client = new S3Client({});
 
-export const restoreDatabase = async (file: string, log: any) => {
+  try {
+    const command = new ListBucketsCommand({});
+    const response = await client.send(command);
+    
+    const buckets = response.Buckets?.map(e=>e.Name);
+
+    return buckets;
+  } catch (err) {
+    console.log("Error", err);
+  }
+};
+
+export const restoreDatabase = async (file: string, log=console.log) => {
   const settings = await getSettings()
   const { databaseType, user, password, host, port, database, redisPassword } = settings;
 
@@ -49,7 +64,7 @@ export const restoreDatabase = async (file: string, log: any) => {
   }
 
   try {
-    const restoreCmd = `gunzip -c ${backupFilePath} | pg_restore --database="${databaseType}://${user}:${password}@${host}:${port}/${database}"`;
+    const restoreCmd = `gunzip -c ${backupFilePath} | pg_restore --dbname="${databaseType}://${user}:${password}@${host}:${port}/${database}"`;
     
     execSync(restoreCmd, { stdio: 'inherit' });
     log({success: 'Database restored successfully'});
@@ -64,7 +79,7 @@ export const restoreDatabase = async (file: string, log: any) => {
     log({success: output.toString()})
     log({success: 'REDIS flushed successfully'});
   } catch (error: any) {
-    log({error: `Error flushing redis: ${error.stderr}`});
+    log({error: `Error flushing redis: ${error?.stderr}`});
   }
 
 
