@@ -7,6 +7,7 @@ const logger = (sendEvent:any) => (message: any) => {
 }
 
 export const loader: LoaderFunction = async ({ request }) => {
+  try {
   const url = new URL(request.url);
   const action = url.searchParams.get("action")
   const file = url.searchParams.get("file")
@@ -32,8 +33,8 @@ export const loader: LoaderFunction = async ({ request }) => {
 
       if(action === 'backup'){
         backupDatabase(log).then((msg)=>{
-          log('Backup completed');
-          log(msg);
+          log({success: 'Backup completed' });
+          log({success: msg });
           closeStream();
         }).catch(e=>{
           log({ error: e.message })
@@ -41,7 +42,7 @@ export const loader: LoaderFunction = async ({ request }) => {
         })
       } else if(action === 'restore'){
         restoreDatabase(file, log).then((msg)=>{
-          log('Process completed');
+          log({success: 'Process completed'});
           log(msg);
           
           closeStream();
@@ -68,4 +69,8 @@ export const loader: LoaderFunction = async ({ request }) => {
       "Connection": "keep-alive"
     }
   });
+  } catch (e) {
+    console.error(e);
+    return new Response(e.message, { status: 500 });
+  }
 };

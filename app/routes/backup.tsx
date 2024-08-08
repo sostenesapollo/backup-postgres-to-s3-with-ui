@@ -12,6 +12,8 @@ import dayjs from '../../node_modules/dayjs/esm/index';
 import { countRecords } from "~/lib/postgres";
 import { removeFile, restoreDatabase } from "~/lib/backup";
 import { twMerge } from "tailwind-merge";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const presetValues = {
   cron: '* * * * *',
@@ -112,7 +114,7 @@ export async function loader() {
     error = _error
   }
 
-  console.log('files', files.length);
+  console.log('files', files?.length);
   
 
   let count, last_sale;
@@ -194,23 +196,14 @@ export default function Index() {
     }
   }
 
+  const reloadFiles = () => {
+    axios.get('/files').then((response) => {
+      setData((data)=>({...data, files: response.data.files}));
+    })
+  }
+
   const newBackup = async () => {
     setAction(()=> 'backup' as any)
-    // try {
-    //   await axios.get('/events?action=restore', {});
-      
-    //   setSuccessMessage('Backup realizado com sucesso.');
-    //   setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
-      
-    //   await axios.get('/files').then((response) => {
-    //     setData((data)=>({...data, files: response.data.files}));
-    //   })
-      
-    // } catch (error) {
-    //   console.error('Update failed:', error);
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -245,10 +238,16 @@ export default function Index() {
   
     eventSource.onmessage = (event: any) => {
       const data = JSON.parse(event.data);
-      // Filter messages based on the clicked action
-      // if (data.action === clickedId) {
-        setMessages((prevMessages) => [...prevMessages, data.message]);
-      // }
+      
+      if(data.message.error) {
+        toast.error(data.message?.error, {autoClose: 10000});
+      }else if(data.message.success){
+        toast.success(data.message?.success, {autoClose: 10000});
+      } else {
+        toast.info(data.message, {autoClose: 10000});
+      }
+
+      // setMessages((prevMessages) => [...prevMessages, data.message]);
     };
   
     eventSource.onerror = () => {
@@ -259,12 +258,15 @@ export default function Index() {
     };
   
     return () => {
+      console.log('finished.');
+      reloadFiles();
       eventSource?.close();
     };
   }, [action]);
 
   return (
     <section className="">
+      <ToastContainer />
 
       <div className="flex">
         <div>

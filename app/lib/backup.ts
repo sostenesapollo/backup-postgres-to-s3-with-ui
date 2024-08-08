@@ -17,11 +17,12 @@ export const restoreDatabase = async (file: string, log: any) => {
 
     const filePath = path.resolve(file);    
     await fs.access(filePath, fs.constants.F_OK);
+    log({success: `File exists: [${file}]` });
   } catch (error: any) {
     if (error.code === 'ENOENT') {
-      log(`File not found: [${file}]`);
+      log({error: `File not found: [${file}]` });
     } else {
-      log(`Error checking file: ${error.message}`);
+      log({ error: `Error checking file: ${error.message}`});
     }
   }
 
@@ -32,38 +33,38 @@ export const restoreDatabase = async (file: string, log: any) => {
     const dropDatabaseCmd = `docker exec $(docker ps | grep ${POSTGRES} | awk '{print $1}') psql -U ${user} -d ${password} -c "DROP DATABASE ${database} WITH (FORCE);"`;
     const output = execSync(dropDatabaseCmd, { encoding: 'utf8' });
     
-    log(output.toString())
-    log('Database dropped successfully');
+    log({success: output.toString() })
+    log({success: 'Database dropped successfully' });
   } catch (error: any) {
-    log(`Error dropping database: ${error.stderr}`);
+    log({error: `Error dropping database: ${error.stderr}`});
   }
 
   try {
     const createDatabaseCmd = `docker exec $(docker ps | grep ${POSTGRES} | awk '{print $1}') psql -U ${user} -d ${password} -c "CREATE DATABASE ${database};"`;
     
     execSync(createDatabaseCmd, { stdio: 'inherit' });
-    log('Database created successfully');
+    log({success: 'Database created successfully'});
   } catch (error: any) {
-    log(`Error creating database: ${error.stderr}`);
+    log({error: `Error creating database: ${error.stderr}`});
   }
 
   try {
     const restoreCmd = `gunzip -c ${backupFilePath} | pg_restore --database="${databaseType}://${user}:${password}@${host}:${port}/${database}"`;
     
     execSync(restoreCmd, { stdio: 'inherit' });
-    log('Database restored successfully');
+    log({success: 'Database restored successfully'});
   }catch (error: any) {
-    log(`Error restoring database: ${error.stderr}`);
+    log({error: `Error restoring database: ${error.stderr}`});
   }
 
   try {
     const rediCmd = `docker exec $(docker ps | grep redis | awk '{print $1}') redis-cli -a ${redisPassword} flushall`;
     const output = execSync(rediCmd, { encoding: 'utf8' });
 
-    log(output.toString())
-    log('REDIS flushed successfully');
+    log({success: output.toString()})
+    log({success: 'REDIS flushed successfully'});
   } catch (error: any) {
-    log(`Error flushing redis: ${error.stderr}`);
+    log({error: `Error flushing redis: ${error.stderr}`});
   }
 
 
@@ -81,7 +82,7 @@ export const backupDatabase = async (log=console.log) => {
     log('Starting database backup...');
     
     execSync(cmd);
-    log(`Backup completed successfully: ${path}`);
+    log({success: `Backup completed successfully: ${path}` });
   } catch (error: any) {
     log({ error: 'Error during database backup' })
     log({ error: error.message })
@@ -91,6 +92,7 @@ export const backupDatabase = async (log=console.log) => {
   try {
     log('Uploading file to s3...');
     await uploadFile(path, bucket, filename);
+    log({success: 'File uploaded successfully' });
   } catch (error: any) {
     log({ error: 'Error uploading backup file' })
     log({ error: error.message })
@@ -100,7 +102,7 @@ export const backupDatabase = async (log=console.log) => {
   try {
     log('Removing .tar.gz files...');
     await removeTarGzFiles();
-    log('Files removed successfully');
+    log({success: 'File removed successfully' });
   } catch (error: any) {
     log({ error: 'Error removing .tar.gz files' })
     log({ error: error.message })
@@ -109,38 +111,18 @@ export const backupDatabase = async (log=console.log) => {
 };
 
 async function removeTarGzFiles() {
-  try {
-    const directoryPath = process.cwd(); // Get the current working directory
-    const files = await fs.readdir(directoryPath);
-
-    
-    for (const file of files) {
-      const filePath = path.join(directoryPath, file);
-      console.log(directoryPath, file, path.extname(filePath));
-      if (path.extname(filePath) === '.gz') {
-        await fs.unlink(filePath);
-        console.log(`Deleted ${filePath}`);
-      }
+  const directoryPath = process.cwd(); // Get the current working directory
+  const files = await fs.readdir(directoryPath);
+  
+  for (const file of files) {
+    const filePath = path.join(directoryPath, file);
+    if (path.extname(filePath) === '.gz') {
+      await fs.unlink(filePath);
     }
-  } catch (error) {
-    console.error('Error removing .tar.gz files:', error);
   }
 }
 
 export async function removeFile(file: string) {
-  try {
-    const filePath = path.resolve(file); // Resolves the file path to an absolute path
-
-    await fs.unlink(filePath);
-    console.log(`Deleted ${filePath}`);
-  } catch (error) {
-    console.error('Error removing file:', error);
-  }
+  const filePath = path.resolve(file); // Resolves the file path to an absolute path
+  await fs.unlink(filePath);
 }
-
-
-// removeTarGzFiles()
-
-// backupDatabase();
-
-// restoreDatabase('backup-2024-08-06T03-50-00-753Z.tar.gz')
