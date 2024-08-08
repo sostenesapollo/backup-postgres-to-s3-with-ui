@@ -1,10 +1,10 @@
 # 🎲 👹 Database Thing
 
-
-##### Backup/restore your database with an interative UI
-##### List all backups files in AWS S3
-##### Create a CRON to schedule automatic backups 
-##### Clear all redis keys after database update
+###### What does the database thing do ?
+- Backup/restore your database with an interative UI
+- List all backups files in AWS S3
+- Create a CRON to schedule automatic backups 
+- Clear all redis keys after database update
 
 
 <img src="public/gif.gif"/>
