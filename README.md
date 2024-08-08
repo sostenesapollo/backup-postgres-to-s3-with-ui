@@ -1,4 +1,6 @@
 # 🎲 👹 Database Thing
+<img src="public/gif.gif"/>
+
 
 ###### What does the database thing do ?
 - Backup/restore your database with an interative UI
@@ -6,8 +8,7 @@
 - Create a CRON to schedule automatic backups 
 - Clear all redis keys after database update
 
-
-<img src="public/gif.gif"/>
+#### Todo List
 
 - [ ] Cron
 - [ ] Whatsapp Notifications
