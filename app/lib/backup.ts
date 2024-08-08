@@ -1,53 +1,75 @@
 import { execSync } from 'child_process';
 import dayjs from 'dayjs';
-import { getBucketName, getDeviceName, } from '~/routes/backup';
+import { getBucketName, getDeviceName, getSettings, } from '~/routes/backup';
 import { uploadFile } from '~/routes/files';
 import fs from 'fs/promises';
-import { spawn } from 'child_process';
-import { promisify } from 'util';
 import path from 'path';
 
-const exec = promisify(spawn);
 
-export const restoreDatabase = async (file) => {
+export const restoreDatabase = async (file: string, log: any) => {
+  const settings = await getSettings()
+  const { databaseType, user, password, host, port, database, redisPassword } = settings;
+
+  log(`Using settings: ${JSON.stringify(settings)}`);
+
   try {
-    if(!file) {
-      console.error('File not provided');
-      return;
-    }
+    if(!file) return log({ error: 'File not provided' });
 
     const filePath = path.resolve(file);    
     await fs.access(filePath, fs.constants.F_OK);
-
-    const backupFilePath = path.join(process.cwd(), file);
-
-    const dropDatabaseCmd = `docker exec $(docker ps | grep postgres:16-alpine | awk '{print $1}') psql -U postgres -d postgres -c "DROP DATABASE pedegas WITH (FORCE);"`;
-    const createDatabaseCmd = `docker exec $(docker ps | grep postgres:16-alpine | awk '{print $1}') psql -U postgres -d postgres -c "CREATE DATABASE pedegas;"`;
-    const restoreCmd = `gunzip -c ${backupFilePath} | pg_restore --dbname="postgresql://postgres:postgres@localhost:5432/pedegas"`;
-
-    try {
-      const output = execSync(dropDatabaseCmd, { encoding: 'utf8' });
-      console.log(output.toString());
-      console.log('Database dropped successfully');
-    } catch (error) {
-      console.error('Error dropping database:', error.stderr);
-    }
-
-    execSync(createDatabaseCmd, { stdio: 'inherit' });
-    execSync(restoreCmd, { stdio: 'inherit' });
-
-    console.log('Database restored successfully.');
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'ENOENT') {
-      console.error('File not found:', file);
+      log(`File not found: [${file}]`);
     } else {
-      console.error('Error checking file:', error);
+      log(`Error checking file: ${error.message}`);
     }
-    console.error('Error during database restore:', error);
   }
+
+  const POSTGRES = `postgres:16-alpine`
+  const backupFilePath = path.join(process.cwd(), file);
+
+  try {
+    const dropDatabaseCmd = `docker exec $(docker ps | grep ${POSTGRES} | awk '{print $1}') psql -U ${user} -d ${password} -c "DROP DATABASE ${database} WITH (FORCE);"`;
+    const output = execSync(dropDatabaseCmd, { encoding: 'utf8' });
+    
+    log(output.toString())
+    log('Database dropped successfully');
+  } catch (error: any) {
+    log(`Error dropping database: ${error.stderr}`);
+  }
+
+  try {
+    const createDatabaseCmd = `docker exec $(docker ps | grep ${POSTGRES} | awk '{print $1}') psql -U ${user} -d ${password} -c "CREATE DATABASE ${database};"`;
+    
+    execSync(createDatabaseCmd, { stdio: 'inherit' });
+    log('Database created successfully');
+  } catch (error: any) {
+    log(`Error creating database: ${error.stderr}`);
+  }
+
+  try {
+    const restoreCmd = `gunzip -c ${backupFilePath} | pg_restore --database="${databaseType}://${user}:${password}@${host}:${port}/${database}"`;
+    
+    execSync(restoreCmd, { stdio: 'inherit' });
+    log('Database restored successfully');
+  }catch (error: any) {
+    log(`Error restoring database: ${error.stderr}`);
+  }
+
+  try {
+    const rediCmd = `docker exec $(docker ps | grep redis | awk '{print $1}') redis-cli -a ${redisPassword} flushall`;
+    const output = execSync(rediCmd, { encoding: 'utf8' });
+
+    log(output.toString())
+    log('REDIS flushed successfully');
+  } catch (error: any) {
+    log(`Error flushing redis: ${error.stderr}`);
+  }
+
+
 };
 
-export const backupDatabase = async () => {
+export const backupDatabase = async (log=console.log) => {
   const DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/pedegas'
   const formattedDate = dayjs().format('YYYY-MM-DD____HH:mm:ss');
   const bucket = await getBucketName()
@@ -55,16 +77,35 @@ export const backupDatabase = async () => {
   const path = filename
   
   try {
-    console.log('Starting database backup...');
-    execSync(`pg_dump --dbname="${DATABASE_URL}" --format=custom | gzip > "${path}"`);
-    console.log(`Backup completed successfully: ${path}`);
-  } catch (error) {
-    console.error('Error during database backup:', error.message);
+    const cmd = `pg_dump --dbname=${DATABASE_URL} --format=custom | gzip > "./${path}"`
+    log('Starting database backup...');
+    
+    execSync(cmd);
+    log(`Backup completed successfully: ${path}`);
+  } catch (error: any) {
+    log({ error: 'Error during database backup' })
+    log({ error: error.message })
     process.exit(1);
   }
 
-  await uploadFile(path, bucket, filename);
-  await removeTarGzFiles();
+  try {
+    log('Uploading file to s3...');
+    await uploadFile(path, bucket, filename);
+  } catch (error: any) {
+    log({ error: 'Error uploading backup file' })
+    log({ error: error.message })
+    process.exit(1);
+  }
+
+  try {
+    log('Removing .tar.gz files...');
+    await removeTarGzFiles();
+    log('Files removed successfully');
+  } catch (error: any) {
+    log({ error: 'Error removing .tar.gz files' })
+    log({ error: error.message })
+    process.exit(1);
+  }
 };
 
 async function removeTarGzFiles() {

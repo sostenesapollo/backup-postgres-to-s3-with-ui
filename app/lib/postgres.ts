@@ -1,22 +1,24 @@
 import dayjs from 'dayjs';
 import pg from 'pg';
+import { getSettings } from '~/routes/backup';
 
 export async function countRecords(tableName="orders") {
+  const settings = await getSettings()
   const client = new pg.Client({
-    host: 'localhost',
-    user: 'postgres',
-    password: 'postgres',
-    database: 'pedegas',
-    port: 5432,
+    host: settings.host,
+    user: settings.user,
+    password: settings.password,
+    database: settings.database,
+    port: parseInt(settings.port),
   });
 
   await client.connect();
 
   const res = await client.query(`
     SELECT
-  COUNT(*) AS count,
-  (SELECT MAX(created_at) FROM orders) AS last_sale
-FROM orders;
+      COUNT(*) AS count,
+      (SELECT MAX(created_at) FROM ${tableName}) AS last_sale
+    FROM orders;
   `);
 
   const { count, last_sale } = res.rows[0];
@@ -29,6 +31,6 @@ FROM orders;
 console.log('counting...');
 
 // Example usage:
-// countRecords('orders')
-//   .then(({ count, last_sale }) => console.log(`Number of orders: ${count}, last sale at ${last_sale}`))
-//   .catch(err => console.error(err));
+countRecords('orders')
+  .then(({ count, last_sale }) => console.log(`Number of orders: ${count}, last sale at ${last_sale}`))
+  .catch(err => console.error(err));

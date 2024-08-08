@@ -4,23 +4,36 @@ import { Check, Cloud, DatabaseBackup, Download, Trash, Upload } from "lucide-re
 import { ThemeToggle } from "./resources.theme-toggle";
 import { prisma } from "~/db.server";
 import { Input } from "~/components/ui/input";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from 'axios';
 import { deleteFile, downloadFile, getFiles } from "./files";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 import dayjs from '../../node_modules/dayjs/esm/index';
 import { countRecords } from "~/lib/postgres";
 import { removeFile, restoreDatabase } from "~/lib/backup";
+import { twMerge } from "tailwind-merge";
 
 const presetValues = {
   cron: '* * * * *',
   device: 'mac',
   bucket: 'pedegasbackups',
-  databaseUrl: 'postgresql://postgres:postgres@localhost:5432/dbname',
+  // Db 
+  databaseType: 'postgresql',
+  user: 'postgres',
+  password: 'postgres',
+  host: 'localhost',
+  port: '5432',
+  database: 'pedegas',
+  // Redis
+  redisHost: 'localhost',
+  redisUser: '',
+  redisPort: '6379',
+  redisPassword: 'eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81',
+  // 
   action: '',
 };
 
-export async function action({ request, context }: any) {
+export async function action({ request }: any) {
   const body = await request.json();
   console.log('body', body);
 
@@ -40,11 +53,7 @@ export async function action({ request, context }: any) {
   
   if(body.action === 'update') {
     await prisma.setting.updateMany({ where: { key: 'settings' }, data: { value: JSON.stringify({
-      cron: body.result.cron,
-      device: body.result.device,
-      bucket: body.result.bucket,
-      action: body.result.action,
-      databaseUrl: body.result.databaseUrl,
+      ...body.result,
     }) } });
   }
 
@@ -54,7 +63,7 @@ export async function action({ request, context }: any) {
     await downloadFile(key)
     console.log('Baixado com sucesso.', body.key);
     console.log('Restaurando banco de dados.', body.key);
-    await restoreDatabase(key);
+    await restoreDatabase(key, null);
     console.log('Restaurado com sucesso.', body.key);
     console.log('Removendo arquivo localmente.', body.key);
     await removeFile(key);
@@ -62,6 +71,12 @@ export async function action({ request, context }: any) {
   }
 
   return {};
+}
+
+export async function getSettings() {
+  const result = await prisma.setting.findFirst();
+  const settings = JSON.parse(result?.value) as typeof presetValues;
+  return settings;  
 }
 
 export async function getBucketName() {
@@ -120,6 +135,11 @@ export async function loader() {
   };
 }
 
+const Loading = ({className=""}) => <svg aria-hidden="true" className={`inline w-6 h-6 mr-2 text-gray-50 animate-spin dark:text-gray-200 fill-pink-600 ${className}`} viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+<path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+</svg>
+
 export default function Index() {
   const _data = useLoaderData<typeof loader>();
 
@@ -140,7 +160,10 @@ export default function Index() {
     }
   };
 
+  const [clickedId, setClickedId] = useState(null);
+  
   const restore = async (key: string) => {
+    setLoading(true)
     try {
       await axios.post('/backup', {key, action: 'restore'});
       setSuccessMessage('Restaurado com sucesso.');
@@ -151,6 +174,9 @@ export default function Index() {
       // })
     } catch (error) {
       console.error('Update failed:', error);
+    } finally {
+      setLoading(false)
+      setClickedId(null)
     }
   }
 
@@ -169,22 +195,22 @@ export default function Index() {
   }
 
   const newBackup = async () => {
-    setLoading(true)
-    try {
-      await axios.post('/new-backup', {});
+    setAction(()=> 'backup' as any)
+    // try {
+    //   await axios.get('/events?action=restore', {});
       
-      setSuccessMessage('Backup realizado com sucesso.');
-      setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
+    //   setSuccessMessage('Backup realizado com sucesso.');
+    //   setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
       
-      await axios.get('/files').then((response) => {
-        setData((data)=>({...data, files: response.data.files}));
-      })
+    //   await axios.get('/files').then((response) => {
+    //     setData((data)=>({...data, files: response.data.files}));
+    //   })
       
-    } catch (error) {
-      console.error('Update failed:', error);
-    } finally {
-      setLoading(false);
-    }
+    // } catch (error) {
+    //   console.error('Update failed:', error);
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -198,9 +224,62 @@ export default function Index() {
     }));
   };
 
+  const [messages, setMessages] = useState<string[]>([]);
+
+  const [action, setAction] = useState(null);
+
+  useEffect(() => {
+    let eventSource = null as any;
+  
+    if(!action) return;
+  
+    console.log('>>>', action);
+  
+    if(action === 'restore') {
+      eventSource = new EventSource("/events?action=restore");
+    } else if(action === 'backup') {
+      eventSource = new EventSource("/events?action=backup");
+    }
+  
+    setLoading(true)
+  
+    eventSource.onmessage = (event: any) => {
+      const data = JSON.parse(event.data);
+      // Filter messages based on the clicked action
+      // if (data.action === clickedId) {
+        setMessages((prevMessages) => [...prevMessages, data.message]);
+      // }
+    };
+  
+    eventSource.onerror = () => {
+      setLoading(()=>false)
+      setAction(null)
+      console.error("EventSource failed");
+      eventSource.close();
+    };
+  
+    return () => {
+      eventSource?.close();
+    };
+  }, [action]);
+
   return (
     <section className="">
 
+      <div className="flex">
+        <div>
+          <pre>
+            {/* {JSON.stringify(data.result, null, 2)} */}
+          </pre>
+        </div>
+        <div>
+          {messages.map((message: any, index) => (
+            message?.error ? 
+              <p key={index} className="bg-red-300 px-2">{message.error}</p> :
+              <p key={index} className="bg-green-400">{message}</p>
+          ))}
+        </div>
+      </div>   
 
       <nav className="flex items-center justify-between p-4 w-full">
         <Link to="/" className="flex items-center space-x-2">
@@ -226,9 +305,11 @@ export default function Index() {
       )}
 
       <div className="container flex flex-col space-y-4">
+        <p className="font-bold text-xl">S3 e Cron</p>
+
         <div className="flex flex-row items-start flex-grow gap-3">
           <div className="flex flex-col grow-1">
-            <label htmlFor="device" className="mb-2 font-medium">Dispositivo</label>
+            <label htmlFor="device" className="mb-2 font-medium">Device label</label>
             <Input
               id="device"
               placeholder="Dispositivo"
@@ -236,19 +317,6 @@ export default function Index() {
               value={data.result.device}
               onChange={handleChange}
               onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-            />
-          </div>
-
-          <div className="flex flex-col min-w-[440px]">
-            <label htmlFor="databaseUrl" className="mb-2 font-medium">Url do banco</label>
-            <Input
-              id="databaseUrl"
-              placeholder="Url do banco"
-              name="databaseUrl"
-              value={data.result.databaseUrl}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
             />
           </div>
 
@@ -276,6 +344,149 @@ export default function Index() {
             />
           </div>
 
+        </div>
+
+        {/* Database */}
+        <p className="font-bold text-xl">Database info</p>
+        <div className="flex gap-2">
+
+          <div className="flex flex-col grow ">
+            <label htmlFor="databaseType" className="mb-2 font-medium">Database type (postgres, mysql, sqlite...)</label>
+            <Input
+              id="databaseType"
+              placeholder="databaseType"
+              name="databaseType"
+              value={data.result.databaseType}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="user" className="mb-2 font-medium">user</label>
+            <Input
+              id="user"
+              placeholder="user"
+              name="user"
+              value={data.result.user}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="password" className="mb-2 font-medium">password</label>
+            <Input
+              id="password"
+              placeholder="password"
+              name="password"
+              type="password"
+              value={data.result.password}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="host" className="mb-2 font-medium">host</label>
+            <Input
+              id="host"
+              placeholder="host"
+              name="host"
+              value={data.result.host}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="port" className="mb-2 font-medium">port</label>
+            <Input
+              id="port"
+              placeholder="port"
+              name="port"
+              value={data.result.port}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="host" className="mb-2 font-medium">database</label>
+            <Input
+              id="database"
+              placeholder="database"
+              name="database"
+              value={data.result.database}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+          
+        </div>
+
+        {/* Redis */}
+        <p className="font-bold text-xl">Redis</p>
+        <div className="flex gap-2">
+
+          <div className="flex flex-col">
+            <label htmlFor="host" className="mb-2 font-medium">host</label>
+            <Input
+              id="host"
+              placeholder="host"
+              name="host"
+              value={data.result.host}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="redisUser" className="mb-2 font-medium">Redis User</label>
+            <Input
+              id="redisUser"
+              placeholder="Redis User"
+              name="redisUser"
+              value={data.result.redisUser}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="redisPort" className="mb-2 font-medium">Redis Port</label>
+            <Input
+              id="redisPort"
+              placeholder="redisPort"
+              name="redisPort"
+              value={data.result.redisPort}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="redisPassword" className="mb-2 font-medium">Redis Password</label>
+            <Input
+              id="redisPassword"
+              placeholder="redisPassword"
+              name="redisPassword"
+              type="password"
+              value={data.result.redisPassword}
+              onChange={handleChange}
+              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
+              className="grow"
+            />
+          </div>
+
           <div className="flex flex-col h-full mt-2">
             <p className="invisible">_</p>
             <Button className='bg-green-600' onClick={update}>
@@ -283,15 +494,12 @@ export default function Index() {
               Salvar modificações
             </Button>
           </div>
+          
         </div>
+
         <div className="flex justify-between">
           <Button className='bg-blue-400' onClick={newBackup} disabled={loading}>
-            {loading ? (
-              <svg aria-hidden="true" className={`inline w-6 h-6 mr-2 text-gray-50 animate-spin dark:text-gray-200 fill-pink-600`} viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-                <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
-            </svg>
-            ) : <Cloud className="mr-3"/>}
+            {loading ? <Loading/> : <Cloud className="mr-3"/>}
 
             {loading ? 'Fazendo o backup...' : 'Realizar Backup' }
           </Button>
@@ -320,7 +528,7 @@ export default function Index() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data?.files?.map((file) => (
+            {data?.files?.map((file, id) => (
               <TableRow key={file.key}>
                 <TableCell>{Math.round(file.size / 1000000)} mb</TableCell>
                 <TableCell className="font-medium">{file.key}</TableCell>
@@ -329,9 +537,19 @@ export default function Index() {
                 <TableCell>
                   <button
                     type="button"
-                    className={"text-white bg-blue-500 border border-blue-700 hover:bg-blue-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500"}
+                    className={twMerge(
+                      "pr-2 text-white bg-blue-500 border border-blue-700 hover:bg-blue-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500",
+                      id === clickedId && 'bg-green-600'
+                    )}
+                    onClick={()=>{
+                      setClickedId(id)
+                      setAction('restore' as any)
+                      restore(file.key)
+                    }}
                   >
-                    <Download className="m-1" onClick={()=>restore(file.key)}/>
+                    {/* {clickedId} */}
+                    {id === clickedId ? <Loading className="ml-3"/> : <Download className="m-1"/>}
+                    {id === clickedId ? 'Restaurando...' : 'Restaurar'}
                   </button>
                   <button
                     type="button"
@@ -344,7 +562,8 @@ export default function Index() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table>     
+
       </div>
     </section>
   );
