@@ -6,6 +6,9 @@
 ##### Create a CRON to schedule automatic backups 
 ##### Clear all redis keys after database update
 
+
+<img src="public/gif.gif"/>
+
 - [ ] Cron
 - [ ] Notificações via whatsapp
 - [x] Listando backups
