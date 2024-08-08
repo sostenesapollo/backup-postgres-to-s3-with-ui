@@ -493,7 +493,7 @@ export default function Index() {
             <p className="invisible">_</p>
             <Button className='bg-green-600' onClick={update}>
               <Check className="mr-2"/>
-              Salvar modificações
+              Save
             </Button>
           </div>
           
@@ -503,13 +503,13 @@ export default function Index() {
           <Button className='bg-blue-400' onClick={newBackup} disabled={loading}>
             {loading ? <Loading/> : <Cloud className="mr-3"/>}
 
-            {loading ? 'Fazendo o backup...' : 'Realizar Backup' }
+            {loading ? 'Loading...' : 'Backup now !' }
           </Button>
           <div className="mt-2">
-            Quantidade de vendas: {data?.count}
+            Orders count: {data?.count}
           </div>
           <div className="mt-2">
-            Última venda: {data?.last_sale}
+            Last record of tabled orders: {data?.last_sale}
           </div>
         </div>
       </div>
@@ -518,7 +518,7 @@ export default function Index() {
         {/* {JSON.stringify(data)} */}
         <Table>
           <TableCaption>
-            Listagem de todos os backups do S3.
+            List of all do S3 bucket files
           </TableCaption>
           <TableHeader>
             <TableRow>

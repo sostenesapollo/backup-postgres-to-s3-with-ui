@@ -1,4 +1,10 @@
-# Todo
+# 🎲 👹 Database Thing
+
+
+##### Backup/restore your database with an interative UI
+##### List all backups files in AWS S3
+##### Create a CRON to schedule automatic backups 
+##### Clear all redis keys after database update
 
 - [ ] Cron
 - [ ] Notificações via whatsapp
