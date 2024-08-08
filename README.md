@@ -10,9 +10,11 @@
 <img src="public/gif.gif"/>
 
 - [ ] Cron
-- [ ] Notificações via whatsapp
-- [x] Listando backups
-- [x] Botão para realizar backup e fazer upload
-- [x] Colocar nome do backup de acordo com o dispositivo
-- [x] Remover backup pela ui
-- [x] Remover backup local
+- [ ] Whatsapp Notifications
+- [ ] Email notifications
+- [x] List S3 backups
+- [x] Button to backup
+- [x] Restore selecting backup file
+- [x] Button to remove S3 backup via ui
+- [x] Add device alias to file name
+- [x] Delete local Files
