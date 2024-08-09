@@ -528,7 +528,7 @@ export default function Index() {
         {/* {JSON.stringify(data)} */}
         <Table>
           <TableCaption>
-            List of all do S3 bucket files
+            S3 bucket files
           </TableCaption>
           <TableHeader>
             <TableRow>
