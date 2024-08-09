@@ -8,6 +8,17 @@
 - Create a CRON to schedule automatic backups 
 - Clear all redis keys after database update
 
+## How to run
+
+#### Run app
+> Create .env file, run prisma migrations, and finally run the app
+```bash
+cp .env.example .env # Create .env and modify the AWS credentials.
+npm install # install deps
+npx prisma migrate dev # Create migrations in database
+npm run dev # Run app
+```
+
 #### Todo List
 
 - [ ] Create `Dockerfile/docker-compose` ?
