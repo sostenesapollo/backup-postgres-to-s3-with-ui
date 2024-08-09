@@ -24,6 +24,14 @@ export const loader: LoaderFunction = async ({request}: any) => {
   };
 };
 
+export const action: LoaderFunction = async ({request}: any) => {
+  const { filePath, bucket, key } = await request.json();
+
+  const result = await uploadFile(filePath, bucket, key);
+
+  return { result };
+}
+
 export async function getFiles(bucket: string) {
   const params = { Bucket: bucket };
   const data = await s3.send(new ListObjectsV2Command(params));
