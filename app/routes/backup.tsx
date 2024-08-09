@@ -14,6 +14,7 @@ import { listBuckets, removeFile, restoreDatabase } from "~/lib/backup";
 import { twMerge } from "tailwind-merge";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { cronToText } from "~/lib/cron";
 
 const presetValues = {
   cron: '* * * * *',
@@ -258,6 +259,9 @@ export default function Index() {
     };
   }, [action]);
 
+  const textCron = cronToText(data.result.cron);
+  const isSaveDisabled = textCron?.error;
+
   return (
     <section className="">
       <ToastContainer />
@@ -301,208 +305,204 @@ export default function Index() {
       )}
 
       <div className="container flex flex-col space-y-4">
-        <p className="font-bold text-xl">S3 e Cron</p>
+        <form onSubmit={(e)=>{ e.preventDefault(); update()} }>
+        
+          <p className="font-bold text-xl">S3 e Cron</p>
 
-        <div className="flex flex-row items-start flex-grow gap-3">
-          <div className="flex flex-col grow-1">
-            <label htmlFor="device" className="mb-2 font-medium">Device label</label>
-            <Input
-              id="device"
-              placeholder="Dispositivo"
-              name="device"
-              value={data.result.device}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-            />
+          <div className="flex flex-row items-start flex-grow gap-3">
+            <div className="flex flex-col grow-1">
+              <label htmlFor="device" className="mb-2 font-medium">Device label</label>
+              <Input
+                id="device"
+                placeholder="Dispositivo"
+                name="device"
+                value={data.result.device}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="flex flex-col grow">
+              <label htmlFor="bucket" className="mb-2 font-medium">Bucket</label>
+              {/* <Input
+                id="bucket"
+                placeholder="Bucket"
+                name="bucket"
+                value={data.result.bucket}
+                onChange={handleChange}
+              /> */}
+              <select
+                id="bucket"
+                name="bucket"
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                value={data.result.bucket}
+                onChange={handleChange}
+              >
+                {data?.buckets?.map((bucket) => (
+                  <option key={bucket} value={bucket}>{bucket}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col grow w-24" >
+              <label htmlFor="cron" className="mb-2 font-medium">Cron</label>
+              <Input
+                id="cron"
+                placeholder="Cron"
+                name="cron"
+                value={data.result.cron}
+                onChange={handleChange}
+              />
+              <div className={twMerge(
+              textCron?.error ? 'text-red-500' : 'text-gray-500'
+                )}>
+                {textCron?.text}
+                {textCron?.error}
+              </div>
+            </div>
+
           </div>
 
-          <div className="flex flex-col grow">
-            <label htmlFor="bucket" className="mb-2 font-medium">Bucket</label>
-            {/* <Input
-              id="bucket"
-              placeholder="Bucket"
-              name="bucket"
-              value={data.result.bucket}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-            /> */}
-            <select
-              id="bucket"
-              name="bucket"
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              value={data.result.bucket}
-              onChange={handleChange}
-            >
-              {data?.buckets?.map((bucket) => (
-                <option key={bucket} value={bucket}>{bucket}</option>
-              ))}
-            </select>
+          {/* Database */}
+          <p className="font-bold text-xl">Database info</p>
+          <div className="flex gap-2">
+
+            <div className="flex flex-col grow ">
+              <label htmlFor="databaseType" className="mb-2 font-medium">Database type (postgres, mysql, sqlite...)</label>
+              <Input
+                id="databaseType"
+                placeholder="databaseType"
+                name="databaseType"
+                value={data.result.databaseType}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="user" className="mb-2 font-medium">user</label>
+              <Input
+                id="user"
+                placeholder="user"
+                name="user"
+                value={data.result.user}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="password" className="mb-2 font-medium">password</label>
+              <Input
+                id="password"
+                placeholder="password"
+                name="password"
+                type="password"
+                value={data.result.password}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="host" className="mb-2 font-medium">host</label>
+              <Input
+                id="host"
+                placeholder="host"
+                name="host"
+                value={data.result.host}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="port" className="mb-2 font-medium">port</label>
+              <Input
+                id="port"
+                placeholder="port"
+                name="port"
+                value={data.result.port}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="host" className="mb-2 font-medium">database</label>
+              <Input
+                id="database"
+                placeholder="database"
+                name="database"
+                value={data.result.database}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+            
           </div>
 
-          <div className="flex flex-col grow " >
-            <label htmlFor="cron" className="mb-2 font-medium">Cron</label>
-            <Input
-              id="cron"
-              placeholder="Cron"
-              name="cron"
-              value={data.result.cron}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-            />
+          {/* Redis */}
+          <p className="font-bold text-xl">Redis</p>
+          <div className="flex gap-2">
+
+            <div className="flex flex-col">
+              <label htmlFor="host" className="mb-2 font-medium">host</label>
+              <Input
+                id="host"
+                placeholder="host"
+                name="host"
+                value={data.result.host}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="redisUser" className="mb-2 font-medium">Redis User</label>
+              <Input
+                id="redisUser"
+                placeholder="Redis User"
+                name="redisUser"
+                value={data.result.redisUser}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="redisPort" className="mb-2 font-medium">Redis Port</label>
+              <Input
+                id="redisPort"
+                placeholder="redisPort"
+                name="redisPort"
+                value={data.result.redisPort}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label htmlFor="redisPassword" className="mb-2 font-medium">Redis Password</label>
+              <Input
+                id="redisPassword"
+                placeholder="redisPassword"
+                name="redisPassword"
+                type="password"
+                value={data.result.redisPassword}
+                onChange={handleChange}
+                className="grow"
+              />
+            </div>
+
+            <div className="flex flex-col h-full mt-2">
+              <p className="invisible">_</p>
+              <Button className='bg-green-600' onClick={update} disabled={isSaveDisabled}>
+                <Check className="mr-2"/>
+                Save
+              </Button>
+            </div>
+            
           </div>
-
-        </div>
-
-        {/* Database */}
-        <p className="font-bold text-xl">Database info</p>
-        <div className="flex gap-2">
-
-          <div className="flex flex-col grow ">
-            <label htmlFor="databaseType" className="mb-2 font-medium">Database type (postgres, mysql, sqlite...)</label>
-            <Input
-              id="databaseType"
-              placeholder="databaseType"
-              name="databaseType"
-              value={data.result.databaseType}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="user" className="mb-2 font-medium">user</label>
-            <Input
-              id="user"
-              placeholder="user"
-              name="user"
-              value={data.result.user}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="password" className="mb-2 font-medium">password</label>
-            <Input
-              id="password"
-              placeholder="password"
-              name="password"
-              type="password"
-              value={data.result.password}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="host" className="mb-2 font-medium">host</label>
-            <Input
-              id="host"
-              placeholder="host"
-              name="host"
-              value={data.result.host}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="port" className="mb-2 font-medium">port</label>
-            <Input
-              id="port"
-              placeholder="port"
-              name="port"
-              value={data.result.port}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="host" className="mb-2 font-medium">database</label>
-            <Input
-              id="database"
-              placeholder="database"
-              name="database"
-              value={data.result.database}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-          
-        </div>
-
-        {/* Redis */}
-        <p className="font-bold text-xl">Redis</p>
-        <div className="flex gap-2">
-
-          <div className="flex flex-col">
-            <label htmlFor="host" className="mb-2 font-medium">host</label>
-            <Input
-              id="host"
-              placeholder="host"
-              name="host"
-              value={data.result.host}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="redisUser" className="mb-2 font-medium">Redis User</label>
-            <Input
-              id="redisUser"
-              placeholder="Redis User"
-              name="redisUser"
-              value={data.result.redisUser}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="redisPort" className="mb-2 font-medium">Redis Port</label>
-            <Input
-              id="redisPort"
-              placeholder="redisPort"
-              name="redisPort"
-              value={data.result.redisPort}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label htmlFor="redisPassword" className="mb-2 font-medium">Redis Password</label>
-            <Input
-              id="redisPassword"
-              placeholder="redisPassword"
-              name="redisPassword"
-              type="password"
-              value={data.result.redisPassword}
-              onChange={handleChange}
-              onKeyDown={(e)=>{if(e.key === 'Enter') update()}}
-              className="grow"
-            />
-          </div>
-
-          <div className="flex flex-col h-full mt-2">
-            <p className="invisible">_</p>
-            <Button className='bg-green-600' onClick={update}>
-              <Check className="mr-2"/>
-              Save
-            </Button>
-          </div>
-          
-        </div>
+        </form>
 
         <div className="flex justify-between">
           <Button className='bg-blue-400' onClick={newBackup} disabled={loading}>
