@@ -19,11 +19,13 @@ npx prisma migrate dev # Create migrations in database
 npm run dev # Run app
 ```
 
+> The way I'm running in my env is using PM2
+
 #### Todo List
 
 - [ ] Create `Dockerfile/docker-compose` ?
-- [ ] Whatsapp Notifications
-- [ ] Email notifications
+- [x] Whatsapp Notifications `(using CURL)`
+<!-- - [ ] Email notifications -->
 - [x] Cron
 - [x] List S3 backups
 - [x] Button to backup
