@@ -22,9 +22,9 @@ npm run dev # Run app
 #### Todo List
 
 - [ ] Create `Dockerfile/docker-compose` ?
-- [ ] Cron
 - [ ] Whatsapp Notifications
 - [ ] Email notifications
+- [x] Cron
 - [x] List S3 backups
 - [x] Button to backup
 - [x] Restore selecting backup file

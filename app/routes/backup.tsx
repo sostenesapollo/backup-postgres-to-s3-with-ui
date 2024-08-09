@@ -38,11 +38,11 @@ const presetValues = {
 
 export async function action({ request }: any) {
   const body = await request.json();
-  console.log('body', body);
+  // console.log('body', body);
 
   try {
     const count =await countRecords()
-    console.log(count);
+    // console.log(count);
     
   }catch(e){
     console.log(e);

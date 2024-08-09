@@ -40,7 +40,7 @@ export async function getFiles(bucket: string) {
   });
 
   const resolvedFiles = await Promise.all(files || []);
-  console.log(resolvedFiles);
+  // console.log(resolvedFiles);
   
   
   // Ordenar os arquivos pelos mais recentes

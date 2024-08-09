@@ -1,4 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import cron from 'node-cron';
+import axios from "axios";
+import { cronToText } from "./lib/cron";
 
 let prisma: PrismaClient;
 
@@ -30,5 +33,34 @@ function getClient() {
 	client.$connect();
 	return client;
 }
+
+async function getSettings() {
+	const result = await prisma.setting.findFirst();
+	const settings = JSON.parse(result?.value) as typeof presetValues;
+	return settings;  
+}
+
+const backup = () => {
+	console.log('Backup triggered.');
+	axios.get(`http://localhost:${process.env.PORT}/events?action=backup`).catch(e=>{
+		console.log(e);
+	})
+}
+
+let prevCron = null as string | null;
+var task = cron.schedule('0 1 * * *', backup, { scheduled: true });
+
+setInterval(async ()=>{
+	const settings = await getSettings()
+	const newCron = settings.cron
+	
+	if(prevCron !== newCron){
+		console.log('cron set to', newCron, cronToText(newCron));
+		prevCron = newCron;
+		
+		task.stop()
+		task = cron.schedule(newCron, backup, { scheduled: true });	
+	}	
+},1000)
 
 export { prisma };
