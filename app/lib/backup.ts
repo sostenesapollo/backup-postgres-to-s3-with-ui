@@ -140,7 +140,6 @@ export const backupDatabase = async (log=console.log) => {
   } catch (error: any) {
     log({ error: 'Error during database backup' })
     log({ error: error.message })
-    process.exit(1);
   }
 
 };
