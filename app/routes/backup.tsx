@@ -302,7 +302,7 @@ export default function Index() {
       
       {data?.error && (
         <span className={`fixed bottom-4 right-4 bg-red-600 text-white p-3 rounded shadow-lg transition-transform duration-500 opacity-100 z-10 translate-y-0`}>
-          Erro ao carregar os arquivos do S3, verifique se o nome do bucket está correto:
+          Error check the logs:
           <pre>
           {JSON.stringify(data?.error, null, 2)}
           </pre>
@@ -516,7 +516,10 @@ export default function Index() {
             {loading ? 'Loading...' : 'Backup now !' }
           </Button>
           <div className="mt-2">
-            Orders count: {data?.count}
+            Database connected current count: 
+            <span className=" ml-5 bg-green-700 text-white text-xs p-1 rounded-xl">
+              {data?.count}
+            </span>
           </div>
           <div className="mt-2">
             Last record of tabled orders: {data?.last_sale}
@@ -533,7 +536,8 @@ export default function Index() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[100px]">Size</TableHead>
-              <TableHead>Key</TableHead>
+              <TableHead>Keys</TableHead>
+              <TableHead>Filename - File Key</TableHead>
               <TableHead>Data</TableHead>
               <TableHead>Hora</TableHead>
               <TableHead>Ações</TableHead>
@@ -547,7 +551,7 @@ export default function Index() {
                 </TableCell>
                 <TableCell>
                   {file.tags?.map((tag) => (
-                    <span key={tag.Key} className="mr-2 bg-blue-300 p-1">
+                    <span key={tag.Key} className="mr-2 bg-blue-700 text-white text-xs p-1 rounded-xl">
                       {tag.Key}: {tag.Value}
                     </span>
                   ))}
