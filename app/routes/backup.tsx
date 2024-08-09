@@ -31,7 +31,7 @@ const presetValues = {
   redisHost: 'localhost',
   redisUser: '',
   redisPort: '6379',
-  redisPassword: 'eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81',
+  p: 'eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81',
   // 
   action: '',
 };
@@ -486,7 +486,7 @@ export default function Index() {
             </div>
 
             <div className="flex flex-col">
-              <label htmlFor="redisPassword" className="mb-2 font-medium">Redis Password</label>
+              <label htmlFor="p" className="mb-2 font-medium">Redis Password</label>
               <Input
                 id="redisPassword"
                 placeholder="redisPassword"
@@ -507,6 +507,18 @@ export default function Index() {
             </div>
             
           </div>
+
+          <div className="flex flex-col">
+              <label htmlFor="p" className="mb-2 font-medium">CURL after success</label>
+              <textarea
+                id="action"
+                placeholder="action"
+                name="action"
+                value={data.result.action}
+                onChange={handleChange as any}
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
         </form>
 
         <div className="flex justify-between">

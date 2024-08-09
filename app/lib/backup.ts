@@ -123,6 +123,26 @@ export const backupDatabase = async (log=console.log) => {
     log({ error: error.message })
     process.exit(1);
   }
+
+  try {
+    const settings = await getSettings()
+    console.log('>>>>>>>> CURL step', settings.action);
+    if(settings.action && !settings.action.includes('curl') && !settings.action.includes('--data-raw')) {
+      log('Invalid Curl');
+      return;
+    }
+    const size = ''
+    const cmd = settings.action.replaceAll('$file', filename).replaceAll('{size}', size).replaceAll('$device', settings.device);
+    log('Starting database backup...');
+    
+    execSync(cmd);
+    log({success: `Backup completed successfully: ${path}` });
+  } catch (error: any) {
+    log({ error: 'Error during database backup' })
+    log({ error: error.message })
+    process.exit(1);
+  }
+
 };
 
 async function removeTarGzFiles() {
