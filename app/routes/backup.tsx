@@ -1,6 +1,6 @@
 import { Button } from "~/components/ui/button";
 import { Link, useLoaderData } from "@remix-run/react";
-import { Check, Cloud, DatabaseBackup, Download, Trash, Upload } from "lucide-react";
+import { Check, Cloud, DatabaseBackup, Download, Trash, Upload, X } from "lucide-react";
 import { ThemeToggle } from "./resources.theme-toggle";
 import { prisma } from "~/db.server";
 import { Input } from "~/components/ui/input";
@@ -174,15 +174,20 @@ export default function Index() {
   };
 
   const [clickedId, setClickedId] = useState(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState(null);
+  const [loadingRemove, setLoadingRemove] = useState(false);
 
   const remove = async (key: string) => {
+    setLoadingRemove(true);
     try {
       await axios.post('/backup', {key, action: 'delete'});
-      setSuccessMessage('Modificado com sucesso.');
+      setSuccessMessage('Removido com sucesso.');
       reloadFiles();
       setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
     } catch (error) {
       console.error('Update failed:', error);
+    } finally {
+      setLoadingRemove(false);
     }
   }
 
@@ -541,29 +546,67 @@ export default function Index() {
                 <TableCell className="font-medium">{file.key}</TableCell>
                 <TableCell>{dayjs(new Date(file.lastModified)).format('DD / MM / YYYY')}</TableCell>
                 <TableCell>{dayjs(new Date(file.lastModified)).format('HH:mm')}</TableCell>
-                <TableCell>
-                  <button
-                    type="button"
-                    className={twMerge(
-                      "pr-2 text-white bg-blue-500 border border-blue-700 hover:bg-blue-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500",
-                      id === clickedId && 'bg-green-600'
-                    )}
-                    onClick={()=>{
-                      setClickedId(id)
-                      setAction('restore' as any)
-                      restore(file.key)
-                    }}
-                  >
-                    {/* {clickedId} */}
-                    {id === clickedId ? <Loading className="ml-3"/> : <Download className="m-1"/>}
-                    {id === clickedId ? 'Restoring...' : 'Restore'}
-                  </button>
-                  <button
-                    type="button"
-                    className={"ml-2 text-white bg-red-600 border border-red-700 hover:bg-red-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:focus:ring-red-800 dark:hover:bg-red-500"}
-                  >
-                    <Trash className="m-1" onClick={()=>remove(file.key)}/>
-                  </button>
+                <TableCell className="flex flex-col">
+                  {confirmRemoveId === file.key ?
+                    <div className="bg-red-700 pt-2">
+                      <div>
+                        <button
+                          type="button"
+                          className={"ml-2 text-white bg-green-600 border border-green-700 hover:bg-green-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-green-500 dark:text-green-500 dark:hover:text-white dark:focus:ring-green-800 dark:hover:bg-green-500"}
+                          onClick={()=>remove(file.key)}
+                          disabled={loadingRemove}
+                        >
+                          {loadingRemove ? <Loading className="m-1"/> : <Check className="m-1"/>}
+                        </button>
+                        <button
+                          type="button"
+                          className={"ml-2 text-white bg-gray-600 border border-gray-700 hover:bg-gray-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-gray-500 dark:text-gray-500 dark:hover:text-white dark:focus:ring-gray-800 dark:hover:bg-gray-500"}
+                          onClick={()=>{
+                            confirmRemoveId && setConfirmRemoveId(null)
+                          }}
+                          disabled={loadingRemove}
+                        >
+                          <X className="m-1"/>
+                        </button>
+                      </div>
+                      <div className="text-white pl-3 pb-2">
+                        <span className="text-2xl">
+                          Confirm remove ? 
+                        </span>
+                        <p></p>
+                        <span className="text-xs">
+                          <p className="font-bold">
+                            File {file.key} will be permanently removed
+                          </p>
+                        </span>
+                        <p>Be careful, this operation cannot be reverted !</p>
+                      </div>
+                    </div> :
+                    <div className="flex">
+                      <button
+                        type="button"
+                        className={twMerge(
+                          "pr-2 text-white bg-blue-500 border border-blue-700 hover:bg-blue-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500",
+                          id === clickedId && 'bg-green-600'
+                        )}
+                        onClick={()=>{
+                          setClickedId(id)
+                          setAction('restore' as any)
+                          restore(file.key)
+                        }}
+                      >
+                        {/* {clickedId} */}
+                        {id === clickedId ? <Loading className="ml-3"/> : <Download className="m-1"/>}
+                        {id === clickedId ? 'Restoring...' : 'Restore'}
+                      </button>
+                      <button
+                        type="button"
+                        className={"ml-2 text-white bg-red-600 border border-red-700 hover:bg-red-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-full text-sm text-center inline-flex items-center dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:focus:ring-red-800 dark:hover:bg-red-500"}
+                      >
+                        <Trash className="m-1" onClick={()=>setConfirmRemoveId(file.key)}/>
+                      </button>
+                    </div>
+                  }
                 </TableCell>
                 
               </TableRow>

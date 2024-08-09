@@ -1,5 +1,5 @@
 # 🎲 👹 The Database Thing
-<img src="public/gif.gif"/>
+<img src="public/demo.gif"/>
 
 
 ###### What does the database thing do ?
