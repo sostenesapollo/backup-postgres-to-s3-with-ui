@@ -542,7 +542,16 @@ export default function Index() {
           <TableBody>
             {data?.files?.map((file, id) => (
               <TableRow key={file.key}>
-                <TableCell>{Math.round(file.size / 1000000)} mb</TableCell>
+                <TableCell>
+                  {Math.round(file.size / 1000000)} mb
+                </TableCell>
+                <TableCell>
+                  {file.tags?.map((tag) => (
+                    <span key={tag.Key} className="mr-2 bg-blue-300 p-1">
+                      {tag.Key}: {tag.Value}
+                    </span>
+                  ))}
+                </TableCell>
                 <TableCell className="font-medium">{file.key}</TableCell>
                 <TableCell>{dayjs(new Date(file.lastModified)).format('DD / MM / YYYY')}</TableCell>
                 <TableCell>{dayjs(new Date(file.lastModified)).format('HH:mm')}</TableCell>

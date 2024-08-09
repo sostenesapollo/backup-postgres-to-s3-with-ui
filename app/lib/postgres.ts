@@ -2,6 +2,8 @@ import dayjs from 'dayjs';
 import pg from 'pg';
 import { getSettings } from '~/routes/backup';
 
+// This is just a simple example of a function that connects to a Postgres database and counts the number of records in a table.
+// After it will be shown in ui to the user.
 export async function countRecords(tableName="orders") {
   const settings = await getSettings()
   const client = new pg.Client({
