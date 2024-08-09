@@ -165,7 +165,7 @@ export default function Index() {
       if(data.error) {
         window.location.reload();
       }
-      setSuccessMessage('Modificado com sucesso.');
+      setSuccessMessage('Updated successfully.');
       reloadFiles();
       setTimeout(() => setSuccessMessage(''), 2000); // Hide message after 2 seconds
     } catch (error) {
