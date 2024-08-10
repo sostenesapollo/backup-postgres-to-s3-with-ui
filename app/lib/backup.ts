@@ -7,7 +7,9 @@ import path from 'path';
 import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3';
 
 export const listBuckets = async () => {
-  const client = new S3Client({});
+  const client = new S3Client({
+    region: process.env.STORAGE_REGION
+  });
 
   try {
     const command = new ListBucketsCommand({});

@@ -7,14 +7,14 @@ import fs from 'fs/promises';
 import { countRecords } from "~/lib/postgres";
 
 console.log({
-  region: 'us-east-1',
+  region: process.env?.STORAGE_REGION,
   accessKeyId: process.env?.STORAGE_ACCESS_KEY,
   secretAccess: process.env?.STORAGE_SECRET,
 });
 
 
 const s3 = new S3Client({
-  region: 'us-east-1',
+  region: process.env?.STORAGE_REGION,
   credentials: {
     accessKeyId: process.env?.STORAGE_ACCESS_KEY,
     secretAccessKey: process.env?.STORAGE_SECRET,
