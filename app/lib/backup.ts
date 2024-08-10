@@ -17,7 +17,7 @@ export const listBuckets = async () => {
 
     return buckets;
   } catch (err) {
-    console.log("Error", err);
+    console.log("Error to list buckets:", err);
   }
 };
 
