@@ -7,6 +7,13 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs/promises';
 import { countRecords } from "~/lib/postgres";
 
+console.log({
+  region: process.env?.STORAGE_REGION,
+  accessKeyId: process.env?.STORAGE_ACCESS_KEY,
+  secretAccess: process.env?.STORAGE_SECRET,
+});
+
+
 const s3 = new S3Client({
   region: process.env?.STORAGE_REGION,
   credentials: {
