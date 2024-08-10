@@ -2,7 +2,6 @@ import { PrismaClient } from "@prisma/client";
 import cron from 'node-cron';
 import axios from "axios";
 import { cronToText } from "./lib/cron";
-import { defaultProps } from "node_modules/react-toastify/dist/components/ToastContainer";
 
 let prisma: PrismaClient;
 
@@ -41,7 +40,7 @@ async function getSettings() {
 		const settings = JSON.parse(result?.value) as typeof presetValues;
 		return settings;  
 	}catch(e) {
-		return defaultProps
+		return {}
 	}
 }
 
