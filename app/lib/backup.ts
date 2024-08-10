@@ -249,7 +249,7 @@ const s3CleanupScript = async (log = console.log) => {
   }
 };
 
-s3CleanupScript(console.log).catch(console.error);
+// s3CleanupScript(console.log).catch(console.error);
 
 // backupDatabase().then(console.log).catch(console.error);
 
