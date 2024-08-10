@@ -1,21 +1,20 @@
 import { LoaderFunction } from "@remix-run/node"; // Ensure using server-side
 import { ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand, GetObjectTaggingCommand } from "@aws-sdk/client-s3";
 import { S3Client } from "@aws-sdk/client-s3";
-import { prisma } from "~/db.server";
 import { getBucketName } from "./backup";
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs/promises';
 import { countRecords } from "~/lib/postgres";
 
 console.log({
-  region: process.env?.STORAGE_REGION,
+  region: 'us-east-1',
   accessKeyId: process.env?.STORAGE_ACCESS_KEY,
   secretAccess: process.env?.STORAGE_SECRET,
 });
 
 
 const s3 = new S3Client({
-  region: process.env?.STORAGE_REGION,
+  region: 'us-east-1',
   credentials: {
     accessKeyId: process.env?.STORAGE_ACCESS_KEY,
     secretAccessKey: process.env?.STORAGE_SECRET,
