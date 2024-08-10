@@ -46,7 +46,7 @@ export async function action({ request }: any) {
     // console.log(count);
     
   }catch(e){
-    console.log(e);
+    console.log('Eror to count records:', e);
   }
   
   if(body.action === 'delete') {
@@ -126,7 +126,7 @@ export async function loader() {
     last_sale = res.last_sale;
   } catch (e) {
     error = e.message;
-    console.error('>', error, 'msg:', e.message);
+    console.error('> Error to count Records:', error, 'msg:', e.message);
   }
 
   let buckets = [];

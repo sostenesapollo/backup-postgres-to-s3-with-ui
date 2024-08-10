@@ -5,7 +5,18 @@ import { getSettings } from '~/routes/backup';
 // This is just a simple example of a function that connects to a Postgres database and counts the number of records in a table.
 // After it will be shown in ui to the user.
 export async function countRecords(tableName="orders") {
+
   const settings = await getSettings()
+
+  console.log('counting...');
+  console.log({
+    host: settings.host,
+    user: settings.user,
+    password: settings.password,
+    database: settings.database,
+    port: parseInt(settings.port),
+  });
+  
   const client = new pg.Client({
     host: settings.host,
     user: settings.user,
