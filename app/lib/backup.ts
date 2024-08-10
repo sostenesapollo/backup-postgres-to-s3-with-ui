@@ -109,7 +109,7 @@ export const backupDatabase = async (log = console.log) => {
                   log({ success: 'File uploaded successfully' });
 
                   // Trigger CURL step asynchronously
-                  triggerCurlStep(console.log, filename);
+                  await triggerCurlStep(console.log, filename);
               } catch (error: any) {
                   log({ error: 'Error uploading or removing backup file' });
                   log({ error: error.message });
@@ -117,6 +117,15 @@ export const backupDatabase = async (log = console.log) => {
                 log('Removing .tar.gz files...');
                 await removeTarGzFiles();
                 log({ success: 'File removed successfully' });
+
+                log('Cleanup S3');
+                try {
+                  await s3CleanupScript(console.log);
+                } catch (error: any) {
+                  log({ error: 'Error cleaning up S3' });
+                  log({ error: error.message });
+                }
+
               }
           } else {
               log({ error: `Backup process exited with code ${code}` });
@@ -146,15 +155,12 @@ const triggerCurlStep = async (log = console.log, filename: string) => {
     
     const size = await getFileSizeInMB(filename)
 
-
     console.log(settings);
 
     const actionText = settings.action
       .replaceAll('$file', filename)
       .replaceAll('$size', size)
       .replaceAll('$device', settings.device)
-
-    
 
     await fs.writeFile('script.sh', actionText);
 
@@ -188,6 +194,54 @@ const triggerCurlStep = async (log = console.log, filename: string) => {
     log({ error: error.message });
   }
 };
+
+const TIMEOUT_CLEANUP = 40000;
+
+const s3CleanupScript = async (log = console.log) => {
+  try {
+    log(`Running S3 cleanup script`);
+
+    // Create a promise that will reject after 30 seconds
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Execution time exceeded for S3 Cleanup')), TIMEOUT_CLEANUP)
+    );
+
+    const settings = await getSettings()
+
+    
+    const executeScript = new Promise((resolve, reject) => {
+      console.log('Starting the script execution...');
+      
+      exec('sh ./cleanup-s3-script.sh', {
+        env: {
+          BUCKET_NAME: settings.bucket,
+          FILES_TO_KEEP: String(settings.s3MaxFilesToKeep),
+          ...process.env, // Garante que outras variáveis de ambiente também estejam disponíveis
+        }
+      }, (error, stdout, stderr) => {
+        if (error) {
+          reject(new Error(`Execution error: ${stderr || error.message}`));
+        } else {
+          console.log('Script executed successfully');
+          console.log('STDOUT:', stdout);
+          console.log('STDERR:', stderr);
+          resolve('Execution completed');
+        }
+      });
+    });
+    
+    // Run both promises, whichever finishes first
+    await Promise.race([executeScript, timeout]);
+
+    log({ success: `Action Script executed successfully.` });
+  
+  } catch (error: any) {
+    log({ error: 'Error in script execution: ' + error.message });
+    log({ error: error.message });
+  }
+};
+
+s3CleanupScript(console.log).catch(console.error);
 
 // backupDatabase().then(console.log).catch(console.error);
 

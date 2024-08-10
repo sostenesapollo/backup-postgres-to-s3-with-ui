@@ -20,6 +20,7 @@ const presetValues = {
   cron: '* * * * *',
   device: 'mac',
   bucket: 'pedegasbackups',
+  s3MaxFilesToKeep: 5,
   // Db 
   databaseType: 'postgresql',
   user: 'postgres',
@@ -346,6 +347,19 @@ export default function Index() {
                   <option key={bucket} value={bucket}>{bucket}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="flex flex-col grow w-24" >
+              <label htmlFor="s3MaxFilesToKeep" className="mb-2 font-medium">Number of Files to keep</label>
+              <Input
+                id="s3MaxFilesToKeep"
+                placeholder="Number of Files to keep"
+                name="s3MaxFilesToKeep"
+                type="number"
+                min={1}
+                value={data.result.s3MaxFilesToKeep}
+                onChange={handleChange}
+              />
             </div>
 
             <div className="flex flex-col grow w-24" >
