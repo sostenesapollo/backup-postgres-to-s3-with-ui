@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "remix build",
-    "dev": "remix dev --manual  --port 3001",
+    "dev": "PORT=8083 remix dev --manual ",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint . ",
     "start": "remix-serve ./build/index.js",
     "typecheck": "tsc"
