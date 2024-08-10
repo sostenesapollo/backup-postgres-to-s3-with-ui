@@ -56,7 +56,7 @@ export const restoreDatabase = async (file: string, log=console.log) => {
       docker exec \
         -e PGPASSWORD=${password} \
         $(docker ps | grep ${POSTGRES} | awk '{print $1}') \
-        psql -U ${user} -d ${database} -c "DROP DATABASE ${database} WITH (FORCE);"
+        psql -U ${user} -d public -c "DROP DATABASE ${database} WITH (FORCE);"
     `;
     console.log(dropDatabaseCmd);
     
