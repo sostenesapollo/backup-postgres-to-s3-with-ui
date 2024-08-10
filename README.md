@@ -20,7 +20,7 @@ npm run dev # Run app
 ```
 
 > The way I'm running in my env is using PM2
-
+$$
 #### Todo List
 
 - [x] Cleanup S3 after finished backup 
