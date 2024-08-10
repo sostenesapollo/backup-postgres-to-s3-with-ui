@@ -178,7 +178,7 @@ export default function Index() {
   const [loadingRemove, setLoadingRemove] = useState(false);
 
   const remove = async (key: string) => {
-    setLoadingRemove(true);
+    // setLoadingRemove(true);
     try {
       await axios.post('/backup', {key, action: 'delete'});
       setSuccessMessage('Removido com sucesso.');
@@ -187,7 +187,7 @@ export default function Index() {
     } catch (error) {
       console.error('Update failed:', error);
     } finally {
-      setLoadingRemove(false);
+      // setLoadingRemove(false);
     }
   }
 

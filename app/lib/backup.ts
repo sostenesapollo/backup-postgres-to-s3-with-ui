@@ -125,24 +125,38 @@ export const backupDatabase = async (log=console.log) => {
   }
 
   try {
-    const settings = await getSettings()
+    const settings = await getSettings();
+
     console.log('>>>>>>>> CURL step', settings.action);
-    if(settings.action && !settings.action.includes('curl') && !settings.action.includes('--data-raw')) {
-      log('Invalid Curl');
-      return;
+
+    if (!settings.action || (!settings.action.includes('curl') && !settings.action.includes('--data-raw'))) {
+        log('Invalid Curl');
+        return;
     }
-    const size = ''
-    const cmd = settings.action.replaceAll('$file', filename).replaceAll('{size}', size).replaceAll('$device', settings.device);
-    log('Starting database backup...');
-    
-    execSync(cmd);
-    log({success: `Backup completed successfully: ${path}` });
+
+    log('Create local script file.');
+
+    await fs.writeFile('script.sh', settings.action)
+
+    if (settings.action) {
+        log(`Executing file script.sh`);
+        try {
+            execSync('sh script.sh', { stdio: 'inherit' });
+        } catch (error: any) {
+            log({ error: `Error executing command: ${error.message}` });
+            log({ error: error.message });
+        }
+    }
+
+    log({ success: `Backup process completed successfully.` });
   } catch (error: any) {
-    log({ error: 'Error during database backup' })
-    log({ error: error.message })
-  }
+      log({ error: 'Error in script execution: '+error.message });
+      log({ error: error.message });
+}
 
 };
+
+// backupDatabase().then(console.log).catch(console.error);
 
 async function removeTarGzFiles() {
   const directoryPath = process.cwd(); // Get the current working directory
