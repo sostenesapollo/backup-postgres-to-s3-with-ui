@@ -47,7 +47,12 @@ export const restoreDatabase = async (file: string, log=console.log) => {
   try {
     console.log(password);
     
-    const dropDatabaseCmd = `docker exec $(docker ps | grep ${POSTGRES} | awk '{print $1}') psql -U ${user} -d ${password} -c "DROP DATABASE ${database} WITH (FORCE);"`;
+    const dropDatabaseCmd = `
+      docker exec \
+        -e PGPASSWORD=${password} \
+        $(docker ps --filter "name=${POSTGRES}" --format "{{.ID}}") \
+        psql -U ${user} -d ${database} -c "DROP DATABASE ${database} WITH (FORCE);"
+    `;
     console.log(dropDatabaseCmd);
     
     const output = execSync(dropDatabaseCmd, { encoding: 'utf8' });
