@@ -52,7 +52,7 @@ const backup = () => {
 }
 
 let prevCron = null as string | null;
-var task = cron.schedule('0 1 * * *', backup, { scheduled: true });
+var task = cron.schedule('0 * * * *', backup, { scheduled: true });
 
 setInterval(async ()=>{
 	try {

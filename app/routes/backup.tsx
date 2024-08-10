@@ -17,7 +17,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { cronToText } from "~/lib/cron";
 
 const presetValues = {
-  cron: '* * * * *',
+  cron: '0 * * * *',
   device: 'mac',
   bucket: 'pedegasbackups',
   s3MaxFilesToKeep: 5,
