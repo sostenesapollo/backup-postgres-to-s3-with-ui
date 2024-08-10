@@ -313,7 +313,7 @@ export default function Index() {
       <div className="container flex flex-col space-y-4">
         <form onSubmit={(e)=>{ e.preventDefault(); update()} }>
         
-          <p className="font-bold text-xl">S3 e Cron</p>
+          <p className="font-bold text-xl">S3 and Cron settings</p>
 
           <div className="flex flex-row items-start flex-grow gap-3">
             <div className="flex flex-col grow-1">
