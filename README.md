@@ -23,9 +23,10 @@ npm run dev # Run app
 
 #### Todo List
 
-- [ ] Create `Dockerfile/docker-compose` ?
+- [x] Cleanup S3 after finished backup 
+- [x] Limit S3 backups according settings in sqlite 
 - [x] Whatsapp Notifications `(using CURL)`
-<!-- - [ ] Email notifications -->
+- [x] CURL after success can be any script configured via ui (usefull for notifications via api)
 - [x] Cron
 - [x] List S3 backups
 - [x] Button to backup
@@ -33,3 +34,4 @@ npm run dev # Run app
 - [x] Button to remove S3 backup via ui
 - [x] Add device alias to file name
 - [x] Delete local Files
+- [ ] Create `Dockerfile/docker-compose` ?
