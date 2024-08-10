@@ -7,3 +7,4 @@ node_modules
 *.tar.gz
 *.db
 *.journal
+script.sh
