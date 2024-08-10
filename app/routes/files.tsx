@@ -95,8 +95,7 @@ export async function uploadFile(filePath: string, bucket: string, key: string) 
     const result = await s3.send(new PutObjectCommand(params));
     console.log('S3 result', result);
     
-
-    return true; // Indicate successful upload
+    return result; // Indicate successful upload
   } catch (error) {
     console.error('Error uploading file:', error);
     throw error;

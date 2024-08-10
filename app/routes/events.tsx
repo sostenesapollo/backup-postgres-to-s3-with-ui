@@ -33,7 +33,7 @@ export const loader: LoaderFunction = async ({ request }) => {
       log('Backup started');
 
       if(action === 'backup'){
-        backupDatabase(log).then((msg)=>{
+        backupDatabase().then((msg)=>{
           log({success: 'Backup completed' });
           log({success: msg });
           closeStream();
