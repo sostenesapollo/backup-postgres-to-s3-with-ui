@@ -55,16 +55,20 @@ let prevCron = null as string | null;
 var task = cron.schedule('0 1 * * *', backup, { scheduled: true });
 
 setInterval(async ()=>{
-	const settings = await getSettings()
-	const newCron = settings.cron
-	
-	if(prevCron !== newCron){
-		console.log('cron set to', newCron, cronToText(newCron));
-		prevCron = newCron;
+	try {
+		const settings = await getSettings()
+		const newCron = settings.cron
 		
-		task.stop()
-		task = cron.schedule(newCron, backup, { scheduled: true });	
-	}	
+		if(prevCron !== newCron){
+			console.log('cron set to', newCron, cronToText(newCron));
+			prevCron = newCron;
+			
+			task.stop()
+			task = cron.schedule(newCron, backup, { scheduled: true });	
+		}	
+	}catch(e) {
+		console.log(e);
+	}
 },1000)
 
 export { prisma };
