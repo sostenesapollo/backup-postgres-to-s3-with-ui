@@ -31,7 +31,7 @@ const presetValues = {
   redisHost: 'localhost',
   redisUser: '',
   redisPort: '6379',
-  p: 'eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81',
+  redisPassword: 'eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81',
   // 
   action: '',
 };
