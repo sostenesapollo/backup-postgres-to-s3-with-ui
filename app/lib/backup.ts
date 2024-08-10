@@ -8,7 +8,11 @@ import { S3Client, ListBucketsCommand } from '@aws-sdk/client-s3';
 
 export const listBuckets = async () => {
   const client = new S3Client({
-    region: process.env.STORAGE_REGION
+    region: process.env.STORAGE_REGION,
+    credentials: {
+      accessKeyId: process.env.STORAGE_ACCESS_KEY || '',
+      secretAccessKey: process.env.STORAGE_SECRET || '',
+    }
   });
 
   try {
