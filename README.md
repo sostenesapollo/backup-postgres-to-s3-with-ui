@@ -28,9 +28,10 @@ npm run dev # Run app
 - [x] Whatsapp Notifications `(using CURL)`
 - [x] CURL after success can be any script configured via ui (usefull for notifications via api)
 - [x] Cron
+- [x] Store tag with a desired table in s3 with the count of it (helpfull for detect how many records have been added, and the last one)
 - [x] List S3 backups
 - [x] Button to backup
-- [x] Restore selecting backup file
+- [x] Restore selecting backup file via ui
 - [x] Button to remove S3 backup via ui
 - [x] Add device alias to file name
 - [x] Delete local Files

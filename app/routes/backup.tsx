@@ -564,9 +564,9 @@ export default function Index() {
               <TableHead className="w-[100px]">Size</TableHead>
               <TableHead>Keys</TableHead>
               <TableHead>Filename - File Key</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Hora</TableHead>
-              <TableHead>Ações</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Time</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
