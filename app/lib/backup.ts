@@ -69,7 +69,7 @@ export const restoreDatabase = async (file: string, log=console.log) => {
   }
 
   try {
-    const createDatabaseCmd = `docker exec $(docker ps | grep ${POSTGRES} | awk '{print $1}') psql -U ${user} -d ${password} -c "CREATE DATABASE ${database};"`;
+    const createDatabaseCmd = `docker exec $(docker ps | grep ${POSTGRES} | awk '{print $1}') psql -U ${user} -d public -c "CREATE DATABASE ${database};"`;
     
     execSync(createDatabaseCmd, { stdio: 'inherit' });
     log({success: 'Database created successfully'});
