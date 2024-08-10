@@ -45,12 +45,11 @@ export const restoreDatabase = async (file: string, log=console.log) => {
   const backupFilePath = path.join(process.cwd(), file);
 
   try {
-    console.log(password);
     
     const dropDatabaseCmd = `
       docker exec \
         -e PGPASSWORD=${password} \
-        $(docker ps --filter "name=${POSTGRES}" --format "{{.ID}}") \
+        $(docker ps | grep ${POSTGRES} | awk '{print $1}) \
         psql -U ${user} -d ${database} -c "DROP DATABASE ${database} WITH (FORCE);"
     `;
     console.log(dropDatabaseCmd);
