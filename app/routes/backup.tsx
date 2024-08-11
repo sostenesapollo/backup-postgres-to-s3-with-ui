@@ -162,7 +162,7 @@ export default function Index() {
 
   const update = async () => {
     try {
-      await axios.post('/backup', {...data, action: 'update'});
+      await axios.post('/backup', {...data, action: 'update', files: undefined, buckets: undefined});
       if(data.error) {
         window.location.reload();
       }

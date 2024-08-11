@@ -89,7 +89,7 @@ export const restoreDatabase = async (file: string, log=console.log) => {
   try {
     console.log('Using password:', redisPassword);
     
-    const rediCmd = `docker exec $(docker ps | grep redis | awk '{print $1}') redis-cli -a ${redisPassword} flushall`;
+    const rediCmd = `docker exec 5f6b845e247d redis-cli -a AnWj323zKl90smjHSNDn33 flushall`;
     const output = execSync(rediCmd, { encoding: 'utf8' });
 
     log({success: output.toString()})
