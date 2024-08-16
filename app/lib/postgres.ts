@@ -8,7 +8,7 @@ export async function countRecords(tableName="orders") {
 
   const settings = await getSettings()
 
-  console.log('counting...');
+  console.log('counting...', settings);
   console.log({
     host: settings.host,
     user: settings.user,
