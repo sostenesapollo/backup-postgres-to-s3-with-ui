@@ -78,6 +78,7 @@ export const restoreDatabase = async (file: string, log=console.log) => {
   }
 
   try {
+    log('Restoring database...', settings);
     const restoreCmd = `gunzip -c ${backupFilePath} | pg_restore --dbname="${databaseType}://${user}:${password}@${host}:${port}/${database}"`;
     
     execSync(restoreCmd, { stdio: 'inherit' });
