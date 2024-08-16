@@ -101,7 +101,10 @@ export const restoreDatabase = async (file: string, log=console.log) => {
 };
 
 export const backupDatabase = async (log = console.log) => {
-  const DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/pedegas';
+  const settings = await getSettings()
+  const { user, password, host, port, database } = settings;
+
+  const DATABASE_URL = `postgresql://${user}:${password}@${host}:${port}/${database}`;
   const formattedDate = dayjs().format('YYYY-MM-DD____HH:mm:ss');
   const bucket = await getBucketName();
   const filename = `${await getDeviceName()}__${bucket}__${formattedDate}.tar.gz`;
@@ -109,6 +112,7 @@ export const backupDatabase = async (log = console.log) => {
 
   try {
       log('Starting database backup...');
+      log('>>>> The database to dump is: '+DATABASE_URL)
       // Using spawn to run the backup in a non-blocking way
       const backupProcess = spawn('sh', ['-c', `pg_dump --dbname=${DATABASE_URL} --format=custom | gzip > "./${path}"`]);
 
